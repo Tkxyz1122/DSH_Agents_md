@@ -11,6 +11,16 @@ dsh-agents-md 是一个 DSH 客户端插件，把 AGENTS.md 的查看与编辑�
 - **项目规则**：会话标签行右侧的按钮，新建 / 编辑**当前对话所在项目**的 `AGENTS.md`
 - **全局规则**：设置页里的独立分区，编辑 `~/.dsh/AGENTS.md`
 
+## 界面
+
+**项目规则**：会话标签行右侧入口，弹层里读取并编辑当前项目的 `AGENTS.md`。
+
+![项目规则入口与编辑弹层](docs/screenshots/project-rules.png)
+
+**全局规则**：设置页左侧的独立分区，编辑 `~/.dsh/AGENTS.md`。
+
+![全局规则设置分区](docs/screenshots/global-rules.png)
+
 ## 特性
 
 - 标签行按钮与「对话 / 轨迹」同字号、同基线、同间距，带文档图标和悬停胶囊
@@ -170,6 +180,10 @@ dsh-agents-md/
 │   └── client.js           # 客户端：设置页「全局规则」分区
 ├── assets/
 │   └── agents-widget.js    # 标签行按钮 + 项目规则编辑弹层
+├── docs/
+│   └── screenshots/        # README 截图
+│       ├── project-rules.png
+│       └── global-rules.png
 ├── LICENSE
 └── README.md
 ```
