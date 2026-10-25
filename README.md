@@ -40,7 +40,11 @@ dsh-agents-md 是一个 DSH 客户端插件，把 AGENTS.md 的查看与编辑�
 
 ### 方式一：从 GitHub 安装（推荐，不依赖源码目录）
 
-在客户端「插件」页把 `github:Tkxyz1122/DSH_Agents_md` 填为安装来源；或者在 profile 目录里执行（命令行里没有 `pnpm` 时用前者）：
+在客户端「插件」页右上角点「添加插件」，输入仓库地址 `https://github.com/Tkxyz1122/DSH_Agents_md`（也支持 `github:Tkxyz1122/DSH_Agents_md` 简写）后点「安装」：
+
+![在插件页添加 GitHub 仓库](docs/screenshots/install-from-github.png)
+
+也可以在 profile 目录里执行（命令行里没有 `pnpm` 时用前一种）：
 
 ```powershell
 cd "$env:USERPROFILE\.dsh\profiles\desktop"
@@ -182,6 +186,7 @@ dsh-agents-md/
 │   └── agents-widget.js    # 标签行按钮 + 项目规则编辑弹层
 ├── docs/
 │   └── screenshots/        # README 截图
+│       ├── install-from-github.png
 │       ├── project-rules.png
 │       └── global-rules.png
 ├── LICENSE
