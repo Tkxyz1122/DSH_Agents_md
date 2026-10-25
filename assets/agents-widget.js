@@ -92,11 +92,17 @@
     return fetch(API + '/state' + q, { cache: 'no-store' }).then(function (r) { return r.json() })
   }
 
-  function saveState(scope, dir, content) {
+  function saveState(scope, dir, content, createOnly) {
     return fetch(API + '/save', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ scope: scope, dir: dir, body: content, title: currentTitle() }),
+      body: JSON.stringify({
+        scope: scope,
+        dir: dir,
+        body: content,
+        title: currentTitle(),
+        createOnly: !!createOnly,
+      }),
     }).then(function (r) { return r.json() })
   }
 
@@ -184,19 +190,34 @@
     var state = { scope: scope, dir: dirInput ? '' : '', path: '' }
     var saving = false
     var loaded = false
+    var loadedDir = ''
+    var loadedExists = false
+
+    // 目录只做分隔符/尾斜杠归一化；Windows 盘符路径忽略大小写，其它保持精确比较。
+    function normDir(p) {
+      var s = String(p || '').trim().replace(/\\/g, '/').replace(/\/+$/, '')
+      if (/^[a-zA-Z]:\//.test(s)) s = s.toLowerCase()
+      return s
+    }
+
+    function sameDir(a, b) {
+      return normDir(a) === normDir(b)
+    }
 
     function setHint(text, bad) {
       hint.textContent = text || ''
       hint.style.color = bad ? '#e5484d' : c.sub
     }
 
-    function load(dir) {
+    function load(dir, notice) {
       setHint('读取中…')
       save.disabled = true
       loaded = false
       requestState(scope, dir).then(function (res) {
         if (!res || res.ok === false) {
           state.dir = dir || ''
+          loadedDir = ''
+          loadedExists = false
           pathLine.textContent = (res && res.path) || '未能定位项目目录'
           ta.value = ''
           setHint((res && res.error) || '读取失败', true)
@@ -204,15 +225,25 @@
         }
         state.dir = res.dir || ''
         state.path = res.path || ''
-        if (dirInput && !dirInput.value && res.dir) dirInput.value = res.dir
+        loadedDir = state.dir
+        loadedExists = !!res.exists
+        if (dirInput && res.dir) dirInput.value = res.dir
         pathLine.textContent = res.path || ''
         if (res.header) fixed.firstChild.nodeValue = res.header
+        // 已有规则优先：只有确认文件不存在时，才把默认规则放进编辑器。
         ta.value = res.exists ? (res.body || '') : (res.defaultBody || '')
-        setHint(res.exists ? '已加载，修改后点保存' : '文件还不存在，下面是默认规则，保存后创建')
+        setHint(
+          notice || (res.exists
+            ? '已检测到现有规则文件，编辑后点保存（不会用默认模板覆盖）'
+            : '文件不存在，下面是默认规则；点保存才会创建'),
+          !!notice
+        )
         panel.dataset.exists = res.exists ? '1' : '0'
         loaded = true
         save.disabled = false
       }).catch(function (err) {
+        loadedDir = ''
+        loadedExists = false
         pathLine.textContent = '读取失败'
         setHint('读取失败：' + String((err && err.message) || err), true)
       })
@@ -224,13 +255,19 @@
         setHint('还没读到文件内容，先改目录回车重试', true)
         return
       }
+      var dir = dirInput ? dirInput.value.trim() : ''
+      // 目录改了却没重新读取时，编辑内容仍属于旧目录，禁止写到新目录。
+      if (dirInput && !sameDir(dir, loadedDir)) {
+        setHint('目录已改，先按回车读取该目录的规则，再保存', true)
+        return
+      }
       saving = true
       save.disabled = true
       cancel.disabled = true
-      var dir = dirInput ? dirInput.value.trim() : ''
       setHint('保存中…')
-      saveState(scope, dir, ta.value).then(function (res) {
+      saveState(scope, dir, ta.value, !loadedExists).then(function (res) {
         if (res && res.ok) {
+          loadedExists = true
           state.path = res.path || state.path
           pathLine.textContent = state.path
           setHint('已保存')
@@ -240,6 +277,11 @@
             cancel.disabled = false
             closeEditor()
           }, 500)
+        } else if (res && res.code === 'EEXIST') {
+          saving = false
+          cancel.disabled = false
+          save.disabled = true
+          load(dir, '该位置已有规则文件，已停止覆盖；已重新读取现有内容')
         } else {
           saving = false
           save.disabled = false
@@ -270,6 +312,15 @@
       }
     })
     if (dirInput) {
+      dirInput.addEventListener('input', function () {
+        if (!loaded) return
+        if (sameDir(dirInput.value.trim(), loadedDir)) {
+          save.disabled = saving
+        } else {
+          save.disabled = true
+          setHint('目录已改，按回车读取该目录的规则', false)
+        }
+      })
       dirInput.addEventListener('keydown', function (e) {
         if (e.key === 'Enter') {
           e.preventDefault()
@@ -280,7 +331,7 @@
 
     document.body.appendChild(mask)
     openMask = mask
-    load(dirInput ? '' : '')
+    load('')
     setTimeout(function () { ta.focus() }, 30)
   }
 
