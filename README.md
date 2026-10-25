@@ -37,7 +37,7 @@ cd "$env:USERPROFILE\.dsh\profiles\desktop"
 pnpm add github:Tkxyz1122/DSH_Agents_md
 ```
 
-装好后 `node_modules\dsh-agents-md` 是实体副本，源码目录可以随意移动或删除；升级时重新安装一次即可。
+装好后 `node_modules\dsh-agents-md` 是实体副本，源码目录可以随意移动或删除；升级方式见下文「升级」一节。
 
 ### 方式二：从本地目录链接安装（改代码时用）
 
@@ -68,6 +68,12 @@ pnpm add github:Tkxyz1122/DSH_Agents_md
 
 > 用客户端的「插件」页从本地目录安装也可以，本质同样是 link + bundles 登记。
 > 这种方式下插件始终读取源码目录：改完代码后宿主半区要完全重启才生效（`assets/agents-widget.js` 刷新页面即可）；源码目录被移动或删除，插件就失效了。
+
+## 升级
+
+- 正常情况下，DSH 客户端更新只替换应用本体，不会删除 profile 里的插件；更新后完全重启客户端即可。
+- 升级本插件：在 profile 目录执行 `pnpm update dsh-agents-md`（或在客户端「插件」页重装），再完全重启客户端。
+- 客户端更新不会自动升级插件；插件版本以安装时锁定的 commit 为准。
 
 ## 使用
 
