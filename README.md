@@ -1,6 +1,6 @@
-# dsh-agents-md
-
 ![dsh-agents-md 封面](docs/cover.png)
+
+# dsh-agents-md
 
 dsh-agents-md 是一个 DSH 客户端插件，把 AGENTS.md 的查看与编辑直接放进工作流：在会话标签行点「项目规则」，就能编辑当前对话所在项目的规则文件；在设置页的「全局规则」里，维护对所有项目生效的通用原则。
 
