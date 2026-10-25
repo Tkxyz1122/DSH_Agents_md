@@ -1,5 +1,7 @@
 # dsh-agents-md
 
+![dsh-agents-md 封面](docs/cover.png)
+
 dsh-agents-md 是一个 DSH 客户端插件，把 AGENTS.md 的查看与编辑直接放进工作流：在会话标签行点「项目规则」，就能编辑当前对话所在项目的规则文件；在设置页的「全局规则」里，维护对所有项目生效的通用原则。
 
 两个编辑器共用一套体验：首行固定标题不可改、正文随意编辑、`Ctrl+S` 保存。**已有规则优先**：目标文件存在时只读取并展示现有内容；只有文件不存在时才预填默认规则，并且要点保存才会创建。项目目录默认跟随当前对话，路径也可手动调整。
@@ -185,6 +187,7 @@ dsh-agents-md/
 ├── assets/
 │   └── agents-widget.js    # 标签行按钮 + 项目规则编辑弹层
 ├── docs/
+│   ├── cover.png           # README 封面
 │   └── screenshots/        # README 截图
 │       ├── install-from-github.png
 │       ├── project-rules.png
