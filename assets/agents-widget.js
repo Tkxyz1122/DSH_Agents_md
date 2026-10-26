@@ -49,6 +49,7 @@
       '.' + BTN_CLASS + ' button:hover::before{background:rgba(127,127,127,.10)}',
       '.' + BTN_CLASS + ' button:active::before{background:rgba(127,127,127,.17)}',
       '.' + BTN_CLASS + ' svg{display:block;flex:none;opacity:.9}',
+      '.' + BTN_CLASS + '.compact button > span{display:none}',
       '.dsh-agents-mask{position:fixed;inset:0;z-index:2147483000;display:flex;align-items:center;',
       'justify-content:center;background:rgba(0,0,0,.32);animation:dsh-agents-fade .12s ease-out}',
       '@keyframes dsh-agents-fade{from{opacity:0}to{opacity:1}}',
@@ -336,22 +337,30 @@
   }
 
   // ---- 注入按钮 -----------------------------------------------------------
-  function tabsRow() {
-    var tabs = document.querySelector('[data-conversation-tabs]')
-    if (!tabs) return null
-    return tabs.parentElement
+  function tabList() {
+    return document.querySelector('[data-conversation-tabs]')
   }
 
-  function ensureButtons() {
-    var row = tabsRow()
-    if (!row) return
-    var holder = row.querySelector(':scope > .' + BTN_CLASS)
-    if (holder && holder.isConnected) return
+  function isFlexRow(node) {
+    if (!node || node.nodeType !== 1) return false
+    var cs = getComputedStyle(node)
+    var dir = cs.flexDirection || 'row'
+    return (cs.display === 'flex' || cs.display === 'inline-flex') && dir.indexOf('row') === 0
+  }
+
+  function sameLine(holder, tabs) {
+    var a = holder.getBoundingClientRect()
+    var b = tabs.getBoundingClientRect()
+    return Math.abs(a.top - b.top) <= 4 && a.left >= b.left - 4
+  }
+
+  function makeButtonHolder() {
     injectStyle()
-    holder = el('div', BTN_CLASS)
+    var holder = el('div', BTN_CLASS)
     var project = el('button', null, '')
     project.type = 'button'
     project.title = '新建 / 编辑当前项目（当前对话所在目录）的 AGENTS.md'
+    project.setAttribute('aria-label', '项目规则')
     project.innerHTML =
       '<svg viewBox="0 0 16 16" width="13" height="13" fill="none" stroke="currentColor" ' +
       'stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
@@ -364,7 +373,47 @@
       openEditor('project')
     })
     holder.appendChild(project)
-    row.appendChild(holder)
+    return holder
+  }
+
+  // 先放标签行的父级（当前布局）；父级不是 flex row 时，退回标签容器本身。
+  // 两个位置都放不下同一行时，收成纯图标按钮再试，避免被挤到「对话」下面。
+  function tryPlace(holder, tabs, compact) {
+    var row = tabs.parentElement
+    var targets = []
+    if (isFlexRow(row)) targets.push(row)
+    if (isFlexRow(tabs)) targets.push(tabs)
+    if (targets.length === 0 && row) targets.push(row)
+    if (compact) holder.classList.add('compact')
+    for (var i = 0; i < targets.length; i++) {
+      targets[i].appendChild(holder)
+      if (sameLine(holder, tabs)) return true
+    }
+    return false
+  }
+
+  function ensureButtons() {
+    var tabs = tabList()
+    if (!tabs) return
+    var holder = document.querySelector('.' + BTN_CLASS)
+    if (holder && holder.isConnected) {
+      if (sameLine(holder, tabs)) {
+        // 窗口变宽后，把纯图标恢复成图标 + 文字
+        if (holder.classList.contains('compact')) {
+          holder.classList.remove('compact')
+          if (!sameLine(holder, tabs)) holder.classList.add('compact')
+        }
+        return
+      }
+      if (holder.parentNode) holder.parentNode.removeChild(holder)
+    }
+    holder = makeButtonHolder()
+    if (!tryPlace(holder, tabs, false)) {
+      if (!tryPlace(holder, tabs, true)) {
+        // 最后兜底：至少保留按钮，轮询下一轮会继续尝试
+        (tabs.parentElement || tabs).appendChild(holder)
+      }
+    }
   }
 
   function start() {

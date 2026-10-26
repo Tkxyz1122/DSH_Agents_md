@@ -1,6 +1,6 @@
 {
   "name": "dsh-agents-md",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "在 DSH 里管理 AGENTS.md：标签行编辑当前项目规则，设置页编辑全局规则，首行固定、新建即用默认模板。",
   "type": "module",
   "main": "lib/index.js",
