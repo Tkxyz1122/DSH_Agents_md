@@ -354,6 +354,36 @@
     return Math.abs(a.top - b.top) <= 4 && a.left >= b.left - 4
   }
 
+  var layoutObserver = null
+  var layoutFrame = 0
+  var watchedTabs = null
+  var watchedRow = null
+
+  function scheduleLayout() {
+    if (layoutFrame) return
+    layoutFrame = requestAnimationFrame(function () {
+      layoutFrame = 0
+      try { ensureButtons() } catch (e) {}
+    })
+  }
+
+  // 窗口/标签行尺寸一变就立刻重排（比 700ms 轮询更跟手）
+  function watchLayout(tabs) {
+    if (typeof ResizeObserver === 'undefined') return
+    if (!layoutObserver) layoutObserver = new ResizeObserver(scheduleLayout)
+    var row = tabs.parentElement
+    if (watchedTabs !== tabs) {
+      if (watchedTabs) { try { layoutObserver.unobserve(watchedTabs) } catch (e) {} }
+      watchedTabs = tabs
+      try { layoutObserver.observe(tabs) } catch (e) {}
+    }
+    if (watchedRow !== row) {
+      if (watchedRow) { try { layoutObserver.unobserve(watchedRow) } catch (e) {} }
+      watchedRow = row
+      if (row) { try { layoutObserver.observe(row) } catch (e) {} }
+    }
+  }
+
   function makeButtonHolder() {
     injectStyle()
     var holder = el('div', BTN_CLASS)
@@ -395,6 +425,7 @@
   function ensureButtons() {
     var tabs = tabList()
     if (!tabs) return
+    watchLayout(tabs)
     var holder = document.querySelector('.' + BTN_CLASS)
     if (holder && holder.isConnected) {
       if (sameLine(holder, tabs)) {
@@ -424,6 +455,7 @@
     var timer = setInterval(function () {
       try { ensureButtons() } catch (e) {}
     }, 700)
+    window.addEventListener('resize', scheduleLayout)
     window.addEventListener('beforeunload', function () { clearInterval(timer) })
   }
 
